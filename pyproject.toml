@@ -1,0 +1,26 @@
+[build-system]
+requires = ["flit_core >=3.2,<4"]
+build-backend = "flit_core.buildapi"
+
+[project]
+name = "ditrl"
+authors = [
+  {name = "Divyansh Srivastava"}, 
+  {name = "Abarajithan Gnaneswaran", email = "agnaneswaran@ucsd.edu"},
+  {name = "Reventh Sharma"},
+  {name = "Dina Dehaini"}
+]
+version = "0.0.1"
+description = "DiTRL: An Open Source Library for Planning using Diffusion Models"
+requires-python = ">=3.10"
+license = {file = "LICENSE"}
+readme = "README.md"
+repository = "https://github.com/dsrivastavv/DiffusionBasedRL"
+classifiers=[
+    "Development Status :: 3 - Alpha",
+    "Programming Language :: Python :: 3.10",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    'numpy >= 1.26.2',
+]
