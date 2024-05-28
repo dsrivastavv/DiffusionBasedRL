@@ -12,8 +12,6 @@ Reinforcement Learning has been the go-to learning paradigm for trajectory plann
 
 * [[1](https://arxiv.org/pdf/2205.09991.pdf)] Planning with Diffusion for Flexible Behavior Synthesis 
 * [[2](https://arxiv.org/pdf/2310.07842.pdf)] DiPPeR: Diffusion-based 2D Path Planner applied on Legged Robots 
-* [[3](https://arxiv.org/pdf/2210.17366.pdf)] CTG 
-* [[4](https://arxiv.org/pdf/2306.06344.pdf)] CTG++ 
-* [[5](https://openreview.net/forum?id=hclEbdHida)] DiffScene 
-* [[6](https://arxiv.org/pdf/1904.01201.pdf)] Habitat: A Platform for Embodied AI Research 
-* [[7](https://arxiv.org/abs/2212.09748)] DiT: Scalable Diffusion Models with Transformers, William Peebles and Saining Xie
+* [[3](https://openreview.net/forum?id=hclEbdHida)] DiffScene 
+* [[4](https://arxiv.org/pdf/1904.01201.pdf)] Habitat: A Platform for Embodied AI Research 
+* [[5](https://arxiv.org/abs/2212.09748)] DiT: Scalable Diffusion Models with Transformers, William Peebles and Saining Xie
