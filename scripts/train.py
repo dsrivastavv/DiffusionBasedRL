@@ -1,5 +1,6 @@
+from diffuser.models.dit import LDiT_models
+
 import diffuser.utils as utils
-import pdb
 
 
 #-----------------------------------------------------------------------------#
@@ -45,16 +46,6 @@ action_dim = dataset.action_dim
 #------------------------------ model & trainer ------------------------------#
 #-----------------------------------------------------------------------------#
 
-model_config = utils.Config(
-    args.model,
-    savepath=(args.savepath, 'model_config.pkl'),
-    horizon=args.horizon,
-    transition_dim=observation_dim + action_dim,
-    cond_dim=observation_dim,
-    dim_mults=args.dim_mults,
-    device=args.device,
-)
-
 diffusion_config = utils.Config(
     args.diffusion,
     savepath=(args.savepath, 'diffusion_config.pkl'),
@@ -93,7 +84,24 @@ trainer_config = utils.Config(
 #-------------------------------- instantiate --------------------------------#
 #-----------------------------------------------------------------------------#
 
-model = model_config()
+if 'DiT' in args.model:
+    model = LDiT_models[args.model](
+        in_channels = observation_dim + action_dim,
+        max_in_len = args.horizon,
+    )
+    model = model.to(device=args.device)
+else:
+    model_config = utils.Config(
+        args.model,
+        savepath=(args.savepath, 'model_config.pkl'),
+        horizon=args.horizon,
+        transition_dim=observation_dim + action_dim,
+        cond_dim=observation_dim,
+        dim_mults=args.dim_mults,
+        device=args.device,
+    )
+    model = model_config()
+
 
 diffusion = diffusion_config(model)
 

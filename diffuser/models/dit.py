@@ -15,12 +15,28 @@ import numpy as np
 import math
 # import xformers.ops
 import torch.nn as nn
-from timm.models.vision_transformer import Attention, Mlp, PatchEmbed
-
 
 def modulate(x, shift, scale):
     return x * (1 + scale.unsqueeze(1)) + shift.unsqueeze(1)
 
+
+class Mlp(nn.Module):
+    def __init__(self, in_features, hidden_features=None, out_features=None, act_layer=nn.GELU, drop=0.):
+        super().__init__()
+        out_features = out_features or in_features
+        hidden_features = hidden_features or in_features
+        self.fc1 = nn.Linear(in_features, hidden_features)
+        self.act = act_layer()
+        self.fc2 = nn.Linear(hidden_features, out_features)
+        self.drop = nn.Dropout(drop)
+
+    def forward(self, x):
+        x = self.fc1(x)
+        x = self.act(x)
+        x = self.drop(x)
+        x = self.fc2(x)
+        x = self.drop(x)
+        return x
 
 #################################################################################
 #               Embedding Layers for Timesteps and Captions                     #
@@ -118,14 +134,14 @@ class DiTBlock(nn.Module):
         )
         self.norm2 = nn.LayerNorm(hidden_size, elementwise_affine=False, eps=1e-6)
         mlp_hidden_dim = int(hidden_size * mlp_ratio)
-        approx_gelu = lambda: nn.GELU(approximate="tanh")
+        approx_gelu = lambda: nn.GELU()
         self.mlp = Mlp(in_features=hidden_size, hidden_features=mlp_hidden_dim, act_layer=approx_gelu, drop=0)
         self.adaLN_modulation = nn.Sequential(
             nn.SiLU(),
             nn.Linear(hidden_size, 6 * hidden_size, bias=True)
         )
 
-    def forward(self, x, x_padding_mask, c):
+    def forward(self, x, c, x_padding_mask=None):
         shift_msa, scale_msa, gate_msa, shift_mlp, scale_mlp, gate_mlp = self.adaLN_modulation(c).chunk(6, dim=1)
         modulate_sa = modulate(self.norm1(x), shift_msa, scale_msa)
         x = (
@@ -177,18 +193,13 @@ class DiT(nn.Module):
     """
     def __init__(
         self,
-        # input_size=32,
-        # patch_size=2,
-        # in_channels=4,
         in_channels,
         hidden_size=1152,
         depth=28,
         num_heads=16,
         mlp_ratio=4.0,
-        class_dropout_prob=0.1,
-        # num_classes=1000,
         max_in_len=100,
-        learn_sigma=True,
+        learn_sigma=False,
     ):
         '''
         Args:
@@ -206,8 +217,6 @@ class DiT(nn.Module):
         self.num_heads = num_heads
         self.max_len = max_in_len
 
-        # self.x_embedder = PatchEmbed(input_size, patch_size, in_channels, hidden_size, bias=True)
-        approx_gelu = lambda: nn.GELU(approximate="tanh")
         self.x_embedder = InputEmbedder(in_channels, hidden_size)
         self.t_embedder = ScalarEmbedder(hidden_size)
 
@@ -218,7 +227,10 @@ class DiT(nn.Module):
         self.blocks = nn.ModuleList([
             DiTBlock(hidden_size, num_heads, mlp_ratio=mlp_ratio) for _ in range(depth)
         ])
-        self.final_layer = FinalLayer(hidden_size, 2 * in_channels)
+        if learn_sigma:
+            self.final_layer = FinalLayer(hidden_size, 2 * in_channels)
+        else:
+            self.final_layer = FinalLayer(hidden_size, in_channels)
         self.initialize_weights()
 
     def initialize_weights(self):
@@ -244,8 +256,6 @@ class DiT(nn.Module):
 
         # Zero-out adaLN modulation layers in DiT blocks:
         for block in self.blocks:
-            nn.init.constant_(block.cross_attn.out_proj.weight, 0)
-            nn.init.constant_(block.cross_attn.out_proj.bias, 0)
             nn.init.constant_(block.adaLN_modulation[-1].weight, 0)
             nn.init.constant_(block.adaLN_modulation[-1].bias, 0)
 
@@ -255,7 +265,7 @@ class DiT(nn.Module):
         nn.init.constant_(self.final_layer.linear.weight, 0)
         nn.init.constant_(self.final_layer.linear.bias, 0)
 
-    def forward(self, x, x_padding_mask, t):
+    def forward(self, x, cond, t, x_padding_mask=None):
         """
         Forward pass of DiT.
         x: (N, max_in_len, in_channel) tensor of spatial inputs 
@@ -268,16 +278,18 @@ class DiT(nn.Module):
 
         # sample level conditions
         t = self.t_embedder(t)                   # (N, hidden_size)
-        c = t                              # (N, hidden_size)
+        c = t                                    # (N, hidden_size)
 
         # transformer blocks
         for block in self.blocks:
-            x = block(x, x_padding_mask, c)   # (N, max_in_len, hidden_size)
+            x = block(x, c, x_padding_mask)   # (N, max_in_len, hidden_size)
 
         # final layer
-        x = self.final_layer(x, c)               # (N, max_in_len, 2 x in_channel)
-        x = x.chunk(2, dim=-1)                 # (N, max_in_len, in_channel), (N, max_in_len, in_channel)
-        x = torch.concat([x[0], x[1]], dim=1)        # (N, 2 x max_in_len, in_channel
+        x = self.final_layer(x, c)               # (N, max_in_len, (2 or 1) x in_channel)
+
+        if self.learn_sigma:
+            x = x.chunk(2, dim=-1)                 # (N, max_in_len, in_channel), (N, max_in_len, in_channel)
+            x = torch.concat([x[0], x[1]], dim=1)        # (N, 2 x max_in_len, in_channel
 
         # return output
         return x                                 # (N, 2 x max_in_len, in_channel)
