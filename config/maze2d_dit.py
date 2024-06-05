@@ -32,7 +32,7 @@ base = {
     'diffusion': {
         ## model
         'model': 'DiT-XXS',
-        'diffusion': 'models.GaussianDiffusion',
+        'diffusion': 'models.ImprovedGaussianDiffusion',
         'horizon': 256,
         'n_diffusion_steps': 256,
         'action_weight': 1,
@@ -71,6 +71,7 @@ base = {
         'n_reference': 50,
         'n_samples': 10,
         'bucket': None,
+        'learn_sigma': False,
         'device': 'cuda',
     },
 

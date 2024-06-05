@@ -265,7 +265,7 @@ class DiT(nn.Module):
         nn.init.constant_(self.final_layer.linear.weight, 0)
         nn.init.constant_(self.final_layer.linear.bias, 0)
 
-    def forward(self, x, cond, t, x_padding_mask=None):
+    def forward(self, x, t, cond=None, x_padding_mask=None):
         """
         Forward pass of DiT.
         x: (N, max_in_len, in_channel) tensor of spatial inputs 
@@ -289,7 +289,7 @@ class DiT(nn.Module):
 
         if self.learn_sigma:
             x = x.chunk(2, dim=-1)                 # (N, max_in_len, in_channel), (N, max_in_len, in_channel)
-            x = torch.concat([x[0], x[1]], dim=1)        # (N, 2 x max_in_len, in_channel
+            x = torch.cat([x[0], x[1]], dim=1)        # (N, 2 x max_in_len, in_channel
 
         # return output
         return x                                 # (N, 2 x max_in_len, in_channel)
@@ -385,29 +385,9 @@ def get_1d_sincos_pos_embed_from_grid(embed_dim, pos):
 #                                   DiT Configs                                  #
 #################################################################################
 
-def DiT_XL(**kwargs):
-    return DiT(depth=28, hidden_size=1152, num_heads=16, **kwargs)
-
-def DiT_L(**kwargs):
-    return DiT(depth=24, hidden_size=1024, num_heads=16, **kwargs)
-
-def DiT_B(**kwargs):
-    return DiT(depth=12, hidden_size=768, num_heads=12, **kwargs)
-
-def DiT_S(**kwargs):
-    return DiT(depth=9, hidden_size=320, num_heads=8, **kwargs)
-
-def DiT_XS(**kwargs):
-    return DiT(depth=6, hidden_size=256, num_heads=4, **kwargs)
-
 def DiT_XXS(**kwargs):
-    return DiT(depth=3, hidden_size=128, num_heads=4, **kwargs)
+    return DiT(depth=4, hidden_size=64, num_heads=8, **kwargs)
 
 LDiT_models = {
-    'DiT-XL': DiT_XL,
-    'DiT-L':  DiT_L,
-    'DiT-B':  DiT_B,
-    'DiT-S':  DiT_S,
-    'DiT-XS': DiT_XS,
     'DiT-XXS': DiT_XXS,
 }
