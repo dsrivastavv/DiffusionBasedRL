@@ -6,6 +6,8 @@ import pdb
 
 from collections import namedtuple
 
+from loguru import logger
+
 DiffusionExperiment = namedtuple('Diffusion', 'dataset renderer model diffusion ema trainer epoch')
 
 def mkdir(savepath):
@@ -34,9 +36,10 @@ def load_config(*loadpath):
     return config
 
 def load_diffusion(*loadpath, epoch='latest', device='cuda:0'):
+    logger.info("Are you here?")
     dataset_config = load_config(*loadpath, 'dataset_config.pkl')
     render_config = load_config(*loadpath, 'render_config.pkl')
-    model_config = load_config(*loadpath, 'model_config.pkl')
+    model_config = load_config(*loadpath, 'trainer_config.pkl')
     diffusion_config = load_config(*loadpath, 'diffusion_config.pkl')
     trainer_config = load_config(*loadpath, 'trainer_config.pkl')
 

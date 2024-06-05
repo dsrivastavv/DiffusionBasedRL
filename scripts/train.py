@@ -1,3 +1,11 @@
+from loguru import logger
+import os
+logger.info(os.getcwd())
+import sys
+logger.info(sys.executable)
+sys.path.append(os.getcwd())
+
+
 from diffuser.models.dit import LDiT_models
 
 import diffuser.utils as utils
@@ -126,6 +134,10 @@ print('✓')
 #-----------------------------------------------------------------------------#
 
 n_epochs = int(args.n_train_steps // args.n_steps_per_epoch)
+logger.info(f'Running for {n_epochs} epochs')
+
+
+
 
 for i in range(n_epochs):
     print(f'Epoch {i} / {n_epochs} | {args.savepath}')
