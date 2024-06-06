@@ -4,7 +4,7 @@ logger.info(os.getcwd())
 import sys
 logger.info(sys.executable)
 sys.path.append(os.getcwd())
-
+import time
 
 from diffuser.models.dit import LDiT_models
 
@@ -134,12 +134,12 @@ print('✓')
 #-----------------------------------------------------------------------------#
 
 n_epochs = int(args.n_train_steps // args.n_steps_per_epoch)
-logger.info(f'Running for {n_epochs} epochs')
-
-
-
-
+n_epochs = 2
+t1 = time.time()
 for i in range(n_epochs):
     print(f'Epoch {i} / {n_epochs} | {args.savepath}')
     trainer.train(n_train_steps=args.n_steps_per_epoch)
+t2 = time.time()
 
+print(f'Training time: {t2 - t1:.2f} s')
+print(f'Training speed: {args.n_steps_per_epoch*n_epochs / (t2 - t1):.2f} steps/s')

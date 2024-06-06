@@ -52,7 +52,7 @@ base = {
         'max_path_length': 40000,
 
         ## serialization
-        'logbase': 'logs',
+        'logbase': 'logs_dit2',
         'prefix': 'diffusion/',
         'exp_name': watch(diffusion_args_to_watch),
 

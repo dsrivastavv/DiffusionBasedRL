@@ -8,6 +8,8 @@ import pdb
 from .arrays import batch_to_device, to_np, to_device, apply_dict
 from .timer import Timer
 from .cloud import sync_logs
+from distutils.version import StrictVersion
+from torch.utils.tensorboard import SummaryWriter
 
 def cycle(dl):
     while True:
@@ -85,6 +87,8 @@ class Trainer(object):
         self.n_reference = n_reference
         self.n_samples = n_samples
 
+        self.writer = SummaryWriter(log_dir=self.logdir)
+
         self.reset_parameters()
         self.step = 0
 
@@ -101,10 +105,10 @@ class Trainer(object):
     #------------------------------------ api ------------------------------------#
     #-----------------------------------------------------------------------------#
 
-    def train(self, n_train_steps):
-
+    def train(self, n_train_steps):        
         timer = Timer()
         for step in range(n_train_steps):
+            accumulated_loss = 0
             for i in range(self.gradient_accumulate_every):
                 batch = next(self.dataloader)
                 batch = batch_to_device(batch)
@@ -112,6 +116,8 @@ class Trainer(object):
                 loss, infos = self.model.loss(*batch)
                 loss = loss / self.gradient_accumulate_every
                 loss.backward()
+                accumulated_loss += loss.item()
+            
 
             self.optimizer.step()
             self.optimizer.zero_grad()
@@ -126,6 +132,7 @@ class Trainer(object):
             if self.step % self.log_freq == 0:
                 infos_str = ' | '.join([f'{key}: {val:8.4f}' for key, val in infos.items()])
                 print(f'{self.step}: {loss:8.4f} | {infos_str} | t: {timer():8.4f}')
+                self.writer.add_scalar('Loss/train', accumulated_loss, self.step)
 
             if self.step == 0 and self.sample_freq:
                 self.render_reference(self.n_reference)
@@ -133,6 +140,7 @@ class Trainer(object):
             if self.sample_freq and self.step % self.sample_freq == 0:
                 self.render_samples(n_samples=self.n_samples)
 
+            
             self.step += 1
 
     def save(self, epoch):
