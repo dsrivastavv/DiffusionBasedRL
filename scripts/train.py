@@ -134,7 +134,6 @@ print('✓')
 #-----------------------------------------------------------------------------#
 
 n_epochs = int(args.n_train_steps // args.n_steps_per_epoch)
-n_epochs = 1
 t1 = time.time()
 for i in tqdm(range(n_epochs)):
     # print(f'Epoch {i} / {n_epochs} | {args.savepath}')
