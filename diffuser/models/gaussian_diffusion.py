@@ -19,6 +19,10 @@ def mean_flat(tensor):
     """
     return tensor.mean(dim=list(range(1, len(tensor.shape))))
 
+def apply_conditioning(x, conditions, action_dim):
+    for t, val in conditions.items():
+        x[:, t, action_dim:] = val.clone()
+    return x
 
 class ModelMeanType(enum.Enum):
     """
@@ -153,12 +157,13 @@ class ImprovedGaussianDiffusion:
     def __init__(
         self,
         *,
+        action_dim,
         betas,
         model_mean_type,
         model_var_type,
         loss_type
     ):
-
+        self.action_dim = action_dim
         self.model_mean_type = model_mean_type
         self.model_var_type = model_var_type
         self.loss_type = loss_type
@@ -421,6 +426,7 @@ class ImprovedGaussianDiffusion:
         self,
         model,
         shape,
+        conditions,
         noise=None,
         clip_denoised=True,
         denoised_fn=None,
@@ -451,6 +457,7 @@ class ImprovedGaussianDiffusion:
         for sample in self.p_sample_loop_progressive(
             model,
             shape,
+            conditions,
             noise=noise,
             clip_denoised=clip_denoised,
             denoised_fn=denoised_fn,
@@ -466,6 +473,7 @@ class ImprovedGaussianDiffusion:
         self,
         model,
         shape,
+        conditions,
         noise=None,
         clip_denoised=True,
         denoised_fn=None,
@@ -489,6 +497,7 @@ class ImprovedGaussianDiffusion:
         else:
             img = th.randn(*shape, device=device)
         indices = list(range(self.num_timesteps))[::-1]
+        img = apply_conditioning(img, conditions, self.action_dim)
 
         if progress:
             # Lazy import so that we don't depend on tqdm.
@@ -508,6 +517,7 @@ class ImprovedGaussianDiffusion:
                     cond_fn=cond_fn,
                     model_kwargs=model_kwargs,
                 )
+                out["sample"] = apply_conditioning(out["sample"], conditions, self.action_dim)
                 yield out
                 img = out["sample"]
 

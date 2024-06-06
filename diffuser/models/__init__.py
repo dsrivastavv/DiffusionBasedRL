@@ -7,6 +7,7 @@ from .respace import SpacedDiffusion, space_timesteps
 
 def create_diffusion(
     timestep_respacing,
+    action_dim,
     noise_schedule="linear", 
     use_kl=False,
     sigma_small=False,
@@ -39,6 +40,7 @@ def create_diffusion(
             if not learn_sigma
             else gd.ModelVarType.LEARNED_RANGE
         ),
-        loss_type=loss_type
+        loss_type=loss_type,
+        action_dim=action_dim
         # rescale_timesteps=rescale_timesteps,
     )
