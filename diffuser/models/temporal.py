@@ -48,7 +48,7 @@ class TemporalUnet(nn.Module):
         horizon,
         transition_dim,
         cond_dim,
-        dim=32,
+        dim=16,
         dim_mults=(1, 2, 4, 8),
     ):
         super().__init__()

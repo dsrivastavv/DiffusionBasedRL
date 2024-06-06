@@ -46,7 +46,7 @@ class Trainer(object):
         gradient_accumulate_every=2,
         step_start_ema=2000,
         update_ema_every=10,
-        log_freq=2000,
+        log_freq=5000,
         sample_freq=1000,
         save_freq=1000,
         label_freq=100000,
