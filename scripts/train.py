@@ -10,7 +10,7 @@ from diffuser.models.dit import LDiT_models
 
 import diffuser.utils as utils
 
-
+from tqdm import tqdm
 #-----------------------------------------------------------------------------#
 #----------------------------------- setup -----------------------------------#
 #-----------------------------------------------------------------------------#
@@ -134,10 +134,10 @@ print('✓')
 #-----------------------------------------------------------------------------#
 
 n_epochs = int(args.n_train_steps // args.n_steps_per_epoch)
-n_epochs = 2
+n_epochs = 1
 t1 = time.time()
-for i in range(n_epochs):
-    print(f'Epoch {i} / {n_epochs} | {args.savepath}')
+for i in tqdm(range(n_epochs)):
+    # print(f'Epoch {i} / {n_epochs} | {args.savepath}')
     trainer.train(n_train_steps=args.n_steps_per_epoch)
 t2 = time.time()
 

@@ -46,7 +46,7 @@ class Trainer(object):
         gradient_accumulate_every=2,
         step_start_ema=2000,
         update_ema_every=10,
-        log_freq=100,
+        log_freq=2000,
         sample_freq=1000,
         save_freq=1000,
         label_freq=100000,
@@ -155,7 +155,7 @@ class Trainer(object):
         }
         savepath = os.path.join(self.logdir, f'state_{epoch}.pt')
         torch.save(data, savepath)
-        print(f'[ utils/training ] Saved model to {savepath}')
+        # print(f'[ utils/training ] Saved model to {savepath}')
         if self.bucket is not None:
             sync_logs(self.logdir, bucket=self.bucket, background=self.save_parallel)
 
