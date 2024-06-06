@@ -60,6 +60,10 @@ if 'DiT' in args.model:
         learn_sigma=args.learn_sigma
     )
     model = model.to(device=args.device)
+    # checkpoint = torch.load("logs32432/maze2d-large-v1/diffusion/H384_T256/state_80000.pt", map_location=lambda storage, loc: storage)
+    # if "ema" in checkpoint:  # supports checkpoints from train.py
+    #     checkpoint = checkpoint["ema"]
+    # model.load_state_dict(checkpoint) 
 else:
     model_config = utils.Config(
         args.model,

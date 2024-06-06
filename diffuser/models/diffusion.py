@@ -1,8 +1,8 @@
 import numpy as np
 import torch
 from torch import nn
-import pdb
 
+from .diffusion_utils import discretized_gaussian_log_likelihood, normal_kl
 import diffuser.utils as utils
 from .helpers import (
     cosine_beta_schedule,
@@ -10,6 +10,12 @@ from .helpers import (
     apply_conditioning,
     Losses,
 )
+
+def mean_flat(tensor):
+        """
+        Take the mean over all non-batch dimensions.
+        """
+        return tensor.mean(dim=list(range(1, len(tensor.shape))))
 
 class GaussianDiffusion(nn.Module):
     def __init__(self, model, horizon, observation_dim, action_dim, n_timesteps=1000,
@@ -113,22 +119,39 @@ class GaussianDiffusion(nn.Module):
         posterior_log_variance_clipped = extract(self.posterior_log_variance_clipped, t, x_t.shape)
         return posterior_mean, posterior_variance, posterior_log_variance_clipped
 
-    def p_mean_variance(self, x, cond, t):
-        x_recon = self.predict_start_from_noise(x, t=t, noise=self.model(x, cond, t))
+    def p_mean_variance(self, x_t, cond, t, model=None, clip_denoised=None):
+        if model is None:
+            output = self.model(x_t, cond=cond, t=t)
+        else:
+            output = model()
 
-        if self.clip_denoised:
+        if clip_denoised is None:
+            clip_denoised = self.clip_denoised
+
+        C = x_t.shape[1]
+        model_output, model_var_values = torch.split(output, C, dim=1)
+        x_recon = self.predict_start_from_noise(x_t, t=t, noise=model_output)
+
+        if clip_denoised:
             x_recon.clamp_(-1., 1.)
         else:
             assert RuntimeError()
 
-        model_mean, posterior_variance, posterior_log_variance = self.q_posterior(
-                x_start=x_recon, x_t=x, t=t)
-        return model_mean, posterior_variance, posterior_log_variance
+        model_mean, _, _ = self.q_posterior(x_start=x_recon, x_t=x_t, t=t)
+        
+        # calculate variance
+        min_log = extract(self.posterior_log_variance_clipped, t, x_t.shape)
+        max_log = extract(torch.log(self.betas), t, x_t.shape)
+        # The model_var_values is [-1, 1] for [min_var, max_var].
+        frac = (model_var_values + 1) / 2
+        model_log_variance = frac * max_log + (1 - frac) * min_log
+
+        return model_mean, None, model_log_variance
 
     @torch.no_grad()
     def p_sample(self, x, cond, t):
         b, *_, device = *x.shape, x.device
-        model_mean, _, model_log_variance = self.p_mean_variance(x=x, cond=cond, t=t)
+        model_mean, _, model_log_variance = self.p_mean_variance(x_t=x, cond=cond, t=t)
         noise = torch.randn_like(x)
         # no noise when t == 0
         nonzero_mask = (1 - (t == 0).float()).reshape(b, *((1,) * (len(x.shape) - 1)))
@@ -186,21 +209,70 @@ class GaussianDiffusion(nn.Module):
 
         return sample
 
+    def _vb_terms_bpd(
+            self, model, x_start, x_t, t, clip_denoised=True, model_kwargs=None
+    ):
+        """
+        Get a term for the variational lower-bound.
+        The resulting units are bits (rather than nats, as one might expect).
+        This allows for comparison to other papers.
+        :return: a dict with the following keys:
+                 - 'output': a shape [N] tensor of NLLs or KLs.
+                 - 'pred_xstart': the x_0 predictions.
+        """
+        true_mean, _, true_log_variance_clipped = self.q_posterior(
+            x_start=x_start, x_t=x_t, t=t
+        )
+        pred_mean, _, model_log_variance = self.p_mean_variance(
+            x_t, cond=None, t=t, model=model, clip_denoised=clip_denoised
+        )
+
+        kl = normal_kl(
+            true_mean, true_log_variance_clipped, pred_mean, model_log_variance
+        )
+        kl = mean_flat(kl) / np.log(2.0)
+
+        decoder_nll = -discretized_gaussian_log_likelihood(
+            x_start, means=pred_mean, log_scales=0.5 * model_log_variance
+        )
+        assert decoder_nll.shape == x_start.shape
+        decoder_nll = mean_flat(decoder_nll) / np.log(2.0)
+
+        # At the first timestep return the decoder NLL,
+        # otherwise return KL(q(x_{t-1}|x_t,x_0) || p(x_{t-1}|x_t))
+        output = torch.where((t == 0), decoder_nll, kl)
+        return output
+
     def p_losses(self, x_start, cond, t):
         noise = torch.randn_like(x_start)
-
+        
         x_noisy = self.q_sample(x_start=x_start, t=t, noise=noise)
         x_noisy = apply_conditioning(x_noisy, cond, self.action_dim)
 
-        x_recon = self.model(x_noisy, cond, t)
-        x_recon = apply_conditioning(x_recon, cond, self.action_dim)
+        C = x_start.shape[1]
+        x_recon = self.model(x_noisy, cond=cond, t=t)
+        x_recon[:, :C, :] = apply_conditioning(x_recon[:, :C, :], cond, self.action_dim)
+        x_recon, model_var_values = torch.split(x_recon, C, dim=1)
 
         assert noise.shape == x_recon.shape
 
+        # vlb loss
+        frozen_out = torch.cat([x_recon.detach(), model_var_values], dim=1)
+        loss_vb = self._vb_terms_bpd(
+            model=lambda *args, r=frozen_out: r,
+            x_start=x_start,
+            x_t=x_noisy,
+            t=t,
+            clip_denoised=False,
+        ).mean()
+
+        # mse loss
         if self.predict_epsilon:
             loss, info = self.loss_fn(x_recon, noise)
         else:
             loss, info = self.loss_fn(x_recon, x_start)
+            info["loss_vb"] = loss_vb
+            loss += info["loss_vb"]
 
         return loss, info
 
