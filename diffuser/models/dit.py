@@ -386,7 +386,7 @@ def get_1d_sincos_pos_embed_from_grid(embed_dim, pos):
 #################################################################################
 
 def DiT_XXS(**kwargs):
-    return DiT(depth=4, hidden_size=64, num_heads=8, **kwargs)
+    return DiT(depth=8, hidden_size=160, num_heads=4, **kwargs)
 
 LDiT_models = {
     'DiT-XXS': DiT_XXS,
