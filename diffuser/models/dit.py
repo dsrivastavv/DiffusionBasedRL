@@ -402,7 +402,7 @@ def DiT_XS(**kwargs):
 
 def DiT_XXS(**kwargs):
     # return DiT(depth=8, hidden_size=160, num_heads=4, **kwargs)
-    return DiT(depth=4, hidden_size=64, num_heads=8, **kwargs)
+    return DiT(depth=8, hidden_size=80, num_heads=4, **kwargs)
     # return DiT(depth=3, hidden_size=128, num_heads=4, **kwargs)
 
 LDiT_models = {
