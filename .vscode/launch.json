@@ -6,7 +6,7 @@
             "type": "python",
             "request": "launch",
             "module": "scripts.train",
-            "args": ["--config", "config.maze2d_dit", "--dataset", "maze2d-large-v1"],
+            "args": ["--config", "config.maze2d_improved", "--dataset", "maze2d-large-v1"],
             "console": "integratedTerminal"
         }
     ]
