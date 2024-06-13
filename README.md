@@ -1,4 +1,4 @@
-# DiTP: Transformer-Based Diffusion Model for Trajectory Planning
+# DiTRL: An Open Source Library for Planning using Diffusion Models
 
 ## Motivation
 
@@ -7,17 +7,6 @@ Reinforcement Learning has been the go-to learning paradigm for trajectory plann
 1. The backbone used for training diffusion models is not suitable for sequential prediction tasks
 2. Lack of open-source and easy-to-use library for training diffusion models for planning, and,
 3. Lack of application in complex planning situations.
-
-We propose DiTP: A transfomer-based path-planning algorithm using diffusion. DiTP has shown notable increase in performance as compared to traditional model-free RL algorithm (IQL) and Diffuser (UNet+Diffusion) in complex maze2D environment.
-
-## Setup
-1. Pull Docker Image from Docker Hub: revenths/diffuser:latest. This is recommended, because its pain to setup MuJoCo dependencies. Alternatively, U can use DockerFile to create docker image or use similar instructions to setup on local without docker.
-2. For training model, weights are also available at: 
-        
-        python -m scripts.train
-3. For Evaluation run:
-
-        python -m scripts.eval
 
 ## Citations
 
