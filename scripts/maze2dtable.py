@@ -138,11 +138,11 @@ if __name__=="__main__":
     # Save scorelist as json
     # logger.info(f"Scorelist: {scorelist}")
     total_reward = np.mean(np.array([x[0] for x in scorelist])), np.std(np.array([x[0] for x in scorelist]))
-    normalized_score = np.mean(np.array([x[1] for x in scorelist])), np.std(np.array([x[1] for x in scorelist]))
+    normalized_score = np.mean(np.array([100*x[1] for x in scorelist])), np.std(np.array([100*x[1] for x in scorelist]))
     result = {
         f'{args.dataset} on {N} episodes': {diffusion.model.__class__.__name__: {
-            'total_reward': total_reward,
-            'normalized_score': normalized_score
+            'total_reward (mean, std_dev)': total_reward,
+            'normalized_score (mean, std_dev)': normalized_score
         }}
     }
     json_path = 'scorelist.json'
