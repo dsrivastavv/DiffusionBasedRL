@@ -6,6 +6,8 @@ import pdb
 
 from collections import namedtuple
 
+from diffuser.models.dit import LDiT_models
+
 from loguru import logger
 
 DiffusionExperiment = namedtuple('Diffusion', 'dataset renderer model diffusion ema trainer epoch')
@@ -36,10 +38,10 @@ def load_config(*loadpath):
     return config
 
 def load_diffusion(*loadpath, epoch='latest', device='cuda:0'):
-    logger.info("Are you here?")
     dataset_config = load_config(*loadpath, 'dataset_config.pkl')
     render_config = load_config(*loadpath, 'render_config.pkl')
-    model_config = load_config(*loadpath, 'trainer_config.pkl')
+    model_config = load_config(*loadpath, 'model_config.pkl')
+
     diffusion_config = load_config(*loadpath, 'diffusion_config.pkl')
     trainer_config = load_config(*loadpath, 'trainer_config.pkl')
 
@@ -49,7 +51,18 @@ def load_diffusion(*loadpath, epoch='latest', device='cuda:0'):
 
     dataset = dataset_config()
     renderer = render_config()
-    model = model_config()
+    # logger.info(f"Type of loadpath: {type(loadpath)} in loadpath: {loadpath}")
+    if 'DiT' in loadpath[0]:
+        logger.info("Loading DiT model")
+        observation_dim = dataset.observation_dim
+        action_dim = dataset.action_dim
+        horizon = dataset.horizon
+        model = LDiT_models['DiT-XXS'](
+            in_channels = observation_dim + action_dim,
+            max_in_len = horizon)
+        model = model.to(device=device)
+    else:
+        model = model_config()
     diffusion = diffusion_config(model)
     trainer = trainer_config(diffusion, dataset, renderer)
 

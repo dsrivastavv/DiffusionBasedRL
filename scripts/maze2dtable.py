@@ -13,8 +13,6 @@ from loguru import logger
 
 from tqdm import tqdm
 
-os.chdir('/root/diffuser')
-
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description='Maze 2D Table')
@@ -30,12 +28,16 @@ if __name__=="__main__":
     config_path = args.config
     dataset = args.dataset
     N = args.numepisodes
-    pretrainedpath = 'logs_2'
+    if config_path=='config.maze2d':
+        pretrainedpath = 'logs_UNET'
+    elif config_path=='config.maze2d_dit':
+        pretrainedpath = 'logs_DiT'
+    else:
+        raise ValueError(f"Config {config_path} not found")
     savepath = join(pretrainedpath, f'{dataset}/rollouts')
     logger.info(f"Creating dir {savepath}: {utils.mkdir(savepath)})")
     vis_freq = 10
     batch_size = 1
-    dataset = 'maze2d-large-v1'
 
     env = datasets.load_environment(dataset)
 
@@ -134,11 +136,16 @@ if __name__=="__main__":
         scorelist.append((total_reward, score)) 
 
     # Save scorelist as json
+    # logger.info(f"Scorelist: {scorelist}")
+    total_reward = np.mean(np.array([x[0] for x in scorelist])), np.std(np.array([x[0] for x in scorelist]))
+    normalized_score = np.mean(np.array([x[1] for x in scorelist])), np.std(np.array([x[1] for x in scorelist]))
     result = {
-        'return': [item[0] for item in scorelist],
-        'scores': [item[1]*100 for item in scorelist]
+        f'{args.dataset} on {N} episodes': {diffusion.model.__class__.__name__: {
+            'total_reward': total_reward,
+            'normalized_score': normalized_score
+        }}
     }
-    json_path = join(savepath, 'scorelist.json')
-    with open(json_path, 'w') as f:
+    json_path = 'scorelist.json'
+    with open(json_path, 'a') as f:
         json.dump(result, f)
     logger.info(f"Scorelist saved to {json_path}")
