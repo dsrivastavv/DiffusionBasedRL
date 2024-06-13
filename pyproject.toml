@@ -23,4 +23,5 @@ classifiers=[
 ]
 dependencies = [
     'numpy >= 1.26.2',
+    'timm'
 ]
