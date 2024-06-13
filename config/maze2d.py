@@ -52,7 +52,7 @@ base = {
         'max_path_length': 40000,
 
         ## serialization
-        'logbase': 'logs_dif_UMAZE_1M',
+        'logbase': 'logs_UNET',
         'prefix': 'diffusion/',
         'exp_name': watch(diffusion_args_to_watch),
 
@@ -85,7 +85,7 @@ base = {
 
         ## serialization
         'vis_freq': 10,
-        'logbase': 'logs',
+        'logbase': 'logs_UNET',
         'prefix': 'plans/release',
         'exp_name': watch(plan_args_to_watch),
         'suffix': '0',
