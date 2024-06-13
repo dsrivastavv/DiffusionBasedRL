@@ -80,9 +80,9 @@ RUN conda update -y --name base conda && conda clean --all -y
 
 RUN conda install -y -n base python=3.8 setuptools=63.2.0 -c defaults -c conda-forge
 
-RUN /opt/conda/bin/pip install pip==23.0.1 patchelf cython<3.0 wheel<0.40.0
+RUN pip install pip==23.0.1 patchelf 'cython<3.0' 'wheel<0.40.0'
 
-RUN /opt/conda/bin/pip install -r /opt/requirements.txt
+RUN pip install -r /opt/requirements.txt
 
 # RUN git config --global url."https://".insteadOf git://
 # RUN conda env create -f /opt/environment.yml
