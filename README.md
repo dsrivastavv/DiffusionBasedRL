@@ -26,7 +26,7 @@ To get started with the repository, follow these steps:
    ```
         docker pull revenths/diffuser:latest
    ```
-        or
+   or alternatively build image using:
    ```
         docker build -t revenths/diffuser:latest .
    ```
@@ -37,12 +37,12 @@ To get started with the repository, follow these steps:
    ```
 
 5. Inside the container within directory: DiffusionBasedRL, you can train the Diffuser models using the following commands:
-        - To train Diffuser:UNET:
+   - To train Diffuser:UNET:
    ```
           nohup python3 -u -m scripts.train --config config.maze2d --dataset <maze2d-large-v1/maze2d-medium-v1/maze2d-umaze-v1> > trainlogs_unet.log &
    ```
 
-        - To train Diffuser:DiT:
+   - To train Diffuser:DiT:
    ```
           nohup python3 -u -m scripts.train --config config.maze2d_dit --dataset <maze2d-large-v1/maze2d-medium-v1/maze2d-umaze-v1> > trainlogs_dit.log &
    ```
@@ -51,7 +51,7 @@ To get started with the repository, follow these steps:
 
 7. Unzip the zip file
 
-8. For inference, run below commandse. This will create a `scorelist.json` file in the DiffusionBasedRL directory.
+8. For inference, run below commands. This will create a `scorelist.json` file in the DiffusionBasedRL directory.
     ```
            python3 -m scripts.maze2dtable --config config.maze2d --dataset maze2d-umaze-v1 --numepisodes 100
            python3 -m scripts.maze2dtable --config config.maze2d --dataset maze2d-medium-v1 --numepisodes 100
