@@ -16,50 +16,50 @@ We propose DiTP: A transfomer-based path-planning algorithm using diffusion. DiT
 To get started with the repository, follow these steps:
 
 1. Clone the repository and pull the latest changes:
-        ```
+   ```
         git clone https://github.com/dsrivastavv/DiffusionBasedRL.git
         cd DiffusionBasedRL
         git pull
-        ```
+   ```
 
-2. Pull the Docker image from Docker Hub or build it from the Dockerfile:
-        ```
+3. Pull the Docker image from Docker Hub or build it from the Dockerfile:
+   ```
         docker pull revenths/diffuser:latest
-        ```
+   ```
         or
-        ```
+   ```
         docker build -t revenths/diffuser:latest .
-        ```
+   ```
 
-3. Run the Docker container with the mounted repository directory:
-        ```
+4. Run the Docker container with the mounted repository directory:
+   ```
         docker run -it -v <path_to_DiffusionBasedRL_on_local>:/root/DiffusionBasedRL --runtime=nvidia revenths/diffuser:latest
-        ```
+   ```
 
-4. Inside the container within directory: DiffusionBasedRL, you can train the Diffuser models using the following commands:
+5. Inside the container within directory: DiffusionBasedRL, you can train the Diffuser models using the following commands:
         - To train Diffuser:UNET:
-          ```
+   ```
           nohup python3 -u -m scripts.train --config config.maze2d --dataset <maze2d-large-v1/maze2d-medium-v1/maze2d-umaze-v1> > trainlogs_unet.log &
-          ```
+   ```
 
         - To train Diffuser:DiT:
-          ```
+   ```
           nohup python3 -u -m scripts.train --config config.maze2d_dit --dataset <maze2d-large-v1/maze2d-medium-v1/maze2d-umaze-v1> > trainlogs_dit.log &
-          ```
+   ```
 
-5. You can download the pretrained model weights from [Model Pretrained Weights](https://drive.google.com/file/d/1teqHRoQ7rU0xKZCDlMy5t-kNj7MSwTQv/view?usp=drive_link).
+6. You can download the pretrained model weights from [Model Pretrained Weights](https://drive.google.com/file/d/1teqHRoQ7rU0xKZCDlMy5t-kNj7MSwTQv/view?usp=drive_link).
 
-6. Unzip the zip file
+7. Unzip the zip file
 
 8. For inference, run below commandse. This will create a `scorelist.json` file in the DiffusionBasedRL directory.
-           ```
+    ```
            python3 -m scripts.maze2dtable --config config.maze2d --dataset maze2d-umaze-v1 --numepisodes 100
            python3 -m scripts.maze2dtable --config config.maze2d --dataset maze2d-medium-v1 --numepisodes 100
            python3 -m scripts.maze2dtable --config config.maze2d --dataset maze2d-large-v1 --numepisodes 100
            python3 -m scripts.maze2dtable --config config.maze2d_dit --dataset maze2d-umaze-v1 --numepisodes 100
            python3 -m scripts.maze2dtable --config config.maze2d_dit --dataset maze2d-medium-v1 --numepisodes 100
            python3 -m scripts.maze2dtable --config config.maze2d_dit --dataset maze2d-large-v1 --numepisodes 100
-           ```
+    ```
 
 
 ## Citations
